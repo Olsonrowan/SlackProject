@@ -1,137 +1,129 @@
 import React from 'react'
-import firebase, { auth } from '../services/firebase'
 import { Link } from 'react-router-dom'
-import { signin } from '../services/auth'
-import TextField from '@material-ui/core/TextField';
+
+//material ui design imports
 import Button from '@material-ui/core/Button';
+import TextField from '@material-ui/core/TextField';
+import firebase from '../services/firebase'
+import Alert from '@material-ui/lab/Alert';
+//redux
+
 
 
 
 class LoginPage extends React.Component {
     state = {
-        user: '',
         email: '',
         password: '',
-    }
-
-    componentDidMount(){
-    auth().onAuthStateChanged((user) => {
-        if (user) {
-            this.setState({
-                user: {
-                    photoURL: user.photoURL,
-                    displayName: user.displayName,
-                }
-            })
-        } else {
-            // No user is signed in.
-            this.setState({ user: null })
-        }
-        });
-}
-
-    handleLogin = async (event) => {
-        event.preventDefault()
-        console.log(event)
-    };
-
-    signInUser = () =>{
-        const provider = new firebase.auth.GoogleAuthProvider();
-        auth().signInWithPopup(provider)
-        .then((result) => {
-            var user = result.user;
-            console.log(user)
-          }).catch(function(error) {
-           console.log(error)
-        });
-    }
-
-
-    handleSubmit = async (event) => {
-        event.preventDefault()
-        try {
-            let { email, password, user } = this.state
-            await signin( user, email, password)
-            this.success()
-        } catch(err) {
-            console.log(err)
-        }
+        errors: [],
+        loading: false,
     };
 
 
 
-    success() {
-        let { state } = this.props.location
-        if (state && state.from) {
-            this.props.history.push(state.from.pathname)
-        } else {
-            this.props.history.push('/')
-        }
-    };
-
-    error(err) {
-        console.log(err)
-        alert('Email or Password is not correct')
-        this.setState({
-            error: err.message
+    handleSubmit = event => {
+        event.preventDefault();
+        if (this.isFormValid(this.state)){
+        this.setState({ errors: [], loading: true});
+        firebase
+        .auth()
+        .signInWithEmailAndPassword(this.state.email, this.state.password)
+        .then(signedInUser => {
+            console.log(signedInUser);
         })
-    };
+        .catch(err =>{
+            console.error(err);
+            this.setState({
+                errors: this.state.errors.concat(err),
+                loading: false
+            });
+        });
+         }
+    }
 
-    handleChange = (event) => {
+    isFormValid = ({ email, password }) => email && password;
+    
+
+    displayErrors = errors => errors.map((error, i) => <p key={i}>{error.message}</p>)
+
+   
+    handleChange = event => {
         this.setState({
             [event.target.name]: event.target.value
         })
-    };
+    }
+
 
     
+    handleInputError = (errors, inputName ) => {
+        return errors.some(error => 
+            error.message.toLowerCase().includes(inputName)
+            )
+             ? 'error'
+             : ''
+    }
+
     render() {
+        const { 
+            email,
+            password,
+            errors,
+            loading,
+        } = this.state;
+
         return (
-            <div>
-                <form className="classes.root"  onSubmit={this.handleSubmit}>
-                    <div className="ui container">
-                        <div>
-                            <h1>Login</h1>
-                            <TextField required id="filled-required"
-                                 label="Email" 
-                                placeholder="Email"
-                                type="email"
-                                name="email"
-                                variant="filled"
-                                onChange={ this.handleChange}
-                                value={ this.state.email }
+            <div className="container">
+                <form className="classes.root" onSubmit={this.handleSubmit}>
+                    <div>
+                        <h1>Welcome! Login to class chatter!</h1>
+                            <br></br>
+
+                        <TextField  
+                            variant="filled"
+                            label="Email" 
+                            placeholder="Email"
+                            type="email"
+                            name="email" 
+                            className={this.handleInputError(errors, 'email')}
+                            onChange={ this.handleChange }
+                            value={email}
                             />
                             <br></br>
-                            <TextField
-                                id="filled-password-input"
-                                autoComplete="current-password"
-                                variant="filled"
-                                label="Password"
-                                placeholder="Password"
-                                type="password"
-                                name="password"
-                                onChange={ this.handleChange }
-                                value={ this.state.passord }
+                        <TextField
+                           
+                            autoComplete="current-password"
+                            variant="filled"
+                            label="Password"
+                            placeholder="Password"
+                            type="password"
+                            name="password" 
+                            onChange={ this.handleChange }
+                            className={this.handleInputError(errors, 'password')}
 
-                                />
-                        </div>
-                        <br></br>
-                        <Button variant="contained" color="secondary" type="submit" >Login</Button>
-                        <Button  variant="outlined" color="primary" onClick={ this.signInUser }> Login Using Google </Button>
-                        <div >
-                            <p>Don't have an account?<Link to="/signup"> Click to Sign Up!</Link> </p> 
-                        </div>
-                        
+                            value={password}
+                            />
+                            
                     </div>
-                </form> 
+                    <br></br>
+
+                    <Button variant='contained' disabled={loading} className={loading ? 'loading' : ''} size='large' color='primary' type="submit">LOGIN</Button>
+
+                    <div>
+                        <p>Dont have an account? <Link to="/signup">sign up!</Link></p>
+                    </div>
+                </form>
+                {errors.length > 0 && (
+                    <Alert variant="filled" severity="warning" >
+                        <h3>Error</h3>
+                        {this.displayErrors(errors)}
+                    </Alert>
+                )}
             </div>
-
-
         )
     }
 }
 
 export default LoginPage
-
 
 
 
@@ -146,44 +138,7 @@ export default LoginPage
 
 //     }
 
-//     handleLogin = async (event) => {
-//         event.preventDefault()
-//         console.log(event)
-//     }
 
-//     handleSubmit = async (event) => {
-//         event.preventDefault()
-//         try {
-//             let { email, password } = this.state
-//             await signin(email, password)
-//             this.success()
-//         } catch(err) {
-//             this.error(err)
-//         }
-//     }
-
-//     success() {
-//         let { state } = this.props.location
-//         if (state && state.from) {
-//             this.props.history.push(state.from.pathname)
-//         } else {
-//             this.props.history.push('/')
-//         }
-//     }
-
-//     error(err) {
-//         console.log(err)
-//         alert('Email or Password is not correct')
-//         this.setState({
-//             error: err.message
-//         })
-//     }
-
-//     handleChange = (event) => {
-//         this.setState({
-//             [event.target.name]: event.target.value
-//         })
-//     }
 
 
 
@@ -202,184 +157,6 @@ export default LoginPage
 //             }
 //           });
 //     }
-
-//     signInUser = () =>{
-//         const provider = new firebase.auth.GoogleAuthProvider();
-//         auth().signInWithPopup(provider)
-//         .then((result) => {
-//             var user = result.user;
-//             console.log(user)
-//           }).catch(function(error) {
-//            console.log(error)
-//           });
-
-//     }
-//     signOutUser(){
-//         auth().signOut()
-//     }   
-//     render(){ 
-//         return(
-//         <div className="Login">
-//             <Router>
-//                 <Nav signout={this.signOutUser} user={this.state.user} />
-//                 <Route exact path="/" component={Home} />
-//                 <Route path="/login" component={ () => <Login signin={this.signInUser} />} />
-//                 {/* <Route path='/profile' component={() => <Profile user={this.state.user} /> } /> */}
-
-//             </Router>
-//             { this.state.user &&
-//             <div>
-//                 <h2>{this.state.user.displayName}</h2>
-//                 <img alt="profilepic" src={this.state.user.photoURL} />
-//             </div>
-//             }
-//         </div>
-//     )
-//   }
-// }
-
-
-
-// function Nav(props){
-//     return(
-//         <div>
-//             <button>
-//                 <NavLink to='/'>Home</NavLink>
-//             </button>
-//             {
-//                 props.user && <button onClick={props.signout}>Sign Out!</button>
-//             }
-//             {
-//                 !props.user &&<button><NavLink to='/login'>Log in</NavLink></button>
-//             }
-//         </div>
-//      )
-//     }
-    
-//     function Home(){
-//         return(
-//             <div>
-//                 <h3>Slack</h3>
-//             </div>
-//         )
-//         }
-
-    
-//     function Login(props){
-//         return(
-//             <div>
-//                 <form className='loginform' onSubmit={this.handleSubmit}>
-//                 <h2>Login</h2>
-//                 <input
-//                 placeholder="Email"
-//                 type="email"
-//                 name='email'
-//                 onChange={this.handleChange}
-//                 value={this.state.email}
-//                 />
-//                 <input
-//                 placeholder="Password"
-//                 type="password"
-//                 name="password"
-//                 onChange={ this.handleChange }
-//                 value={ this.state.passord }
-
-//                 />
-//                 </form>
-//                 <button onClick={props.signin}>Google</button>
-//             </div>
-//         )
-//         }
-    
-
-
-// export default LoginPage
-
-
-
-// class LoginPage extends React.Component {
-//     state = {
-//         email: '',
-//         password: '',
-//         error: ''
-//     }
-
-//     handleLogin = async (event) => {
-//         event.preventDefault()
-//         signInWithGoogle()
-//         console.log(event)
-//     }
-
-//     handleSubmit = async (event) => {
-//         event.preventDefault()
-//         try {
-//             let { email, password } = this.state
-//             await signin(email, password)
-//             this.success()
-//         } catch(err) {
-//             this.error(err)
-//         }
-//     }
-
-//     success() {
-//         let { state } = this.props.location
-//         if (state && state.from) {
-//             this.props.history.push(state.from.pathname)
-//         } else {
-//             this.props.history.push('/')
-//         }
-//     }
-
-//     error(err) {
-//         console.log(err)
-//         alert('Email or Password is not correct')
-//         this.setState({
-//             error: err.message
-//         })
-//     }
-
-//     handleChange = (event) => {
-//         this.setState({
-//             [event.target.name]: event.target.value
-//         })
-//     }
-
-//     render(){
-//         return(
-//             <div>
-//                 <form className="ui form" onSubmit={this.handleSubmit}>
-//                     <div className="ui container">
-//                         <div>
-//                             <h1>Login</h1>
-//                             <input
-//                                 placeholder="Email"
-//                                 type="email"
-//                                 name="email"
-//                                 onChange={ this.handleChange}
-//                                 value={ this.state.email }
-//                             />
-//                             <input
-//                                 placeholder="Password"
-//                                 type="password"
-//                                 name="password"
-//                                 onChange={ this.handleChange }
-//                                 value={ this.state.passord }
-
-//                                 />
-//                         </div>
-
-//                         <button className="ui primary basic button " type="submit" >Login</button>
-//                         <button className="ui secondary basic button" type="submit" onClick={ this.handleLogin }> Login Using Google </button>
-
-//                         <div >
-//                             <p>Don't have an account? <Link to="/signup"> Sign Up!</Link> </p> 
-//                         </div>
-//                     </div>
-//                 </form> 
-//             </div>
-//         )
-//     }
-// }
 
 
 // export default LoginPage
