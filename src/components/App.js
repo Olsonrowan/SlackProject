@@ -1,40 +1,45 @@
-import React, { Component } from 'react';
-import { 
-    BrowserRouter as Router,
-    Route,
-    NavLink 
-} from 'react-router-dom'
-import firebase, { db, auth } from '../services/firebase'
+import React from 'react';
+
+//design material ui 
+import Grid from '@material-ui/core/Grid';
+
+import SideBar from './SideBar'
+import ColorPanel from './ColorPanel'
+import Messages from './Messages'
+import Panel from './Panel'
 
 
-// import { signout } from '../services/auth'
 
-import PrivateRoute from './PrivateRoute'
-
-
-import LoginPage from '../pages/LoginPage';
-import SignUpPage from '../pages/SignUpPage'
-// import { AuthProvider } from '../services/auth';
-import HomePage from '../pages/HomePage'
+// import PrivateRoute from './PrivateRoute'
 
 
-class App extends React.Component{
-    render(){
-        return(
-        <div>
-            <Router>
-                {/* <Route exact path='/'>
-                    <HomePage ={} />
-                </Route> */}
-                <Route  path='/login' component={LoginPage}/>
-                <Route  path='/signup' component={SignUpPage}/>
+const App = () => (
+    <div>
+        <Grid
+        container
+        direction="row"
+        justify="center"
+        alignItems="flex-start"
+        >
+          
+            <Grid item  xs={1}>
+                    <ColorPanel/>
+            </Grid>
 
-            </Router>
-        </div>
-        )
-    }
-}
+            <Grid item xs={4}>
+                <SideBar/>
+            </Grid>
+            <Grid item xs={5}>
+                <Messages />
+            </Grid>
+            <Grid item xs={2}>
+                <Panel/>
+            </Grid>
 
+            
+        </Grid>
+    </div>
+)
 
 export default App
 
@@ -43,7 +48,21 @@ export default App
 
 
 // const App = () =>{
-    
+    // let [ authenticated, setAuth ] = useState(false)
+    // let [ user, setUser ] = useState(null)
+
+    // useEffect( () => {
+    //     auth().onAuthStateChanged( user => {
+    //         if (user) {
+    //             setAuth(true)
+    //             setUser(user)
+    //             console.log(user)
+    //         } else {
+    //             setAuth(false)
+    //             setUser(null) 
+    //         }
+    //     })
+    // }, [])
 //         return (
 //             <AuthProvider>
 //             <Router>
