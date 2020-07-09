@@ -1,4 +1,9 @@
 import React from 'react';
+import firebase from '../services/firebase'
+import { connect } from 'react-redux'
+
+
+// material ui design
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import Drawer from '@material-ui/core/Drawer';
@@ -8,22 +13,36 @@ import List from '@material-ui/core/List';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Typography from '@material-ui/core/Typography';
 import Divider from '@material-ui/core/Divider';
-import IconButton from '@material-ui/core/IconButton';
-import MenuIcon from '@material-ui/icons/Menu';
-import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
-import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+
+//icons
+import MenuIcon from '@material-ui/icons/Menu';
+import IconButton from '@material-ui/core/IconButton';
+import ChevronLeftIcon from '@material-ui/icons/ChevronLeft';
+import ChevronRightIcon from '@material-ui/icons/ChevronRight';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 // import MailIcon from '@material-ui/icons/Mail';
+import SettingsIcon from '@material-ui/icons/Settings';
 import PermIdentityIcon from '@material-ui/icons/PermIdentity';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+
+//drop down
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import Collapse from '@material-ui/core/Collapse';
-import StarBorder from '@material-ui/icons/StarBorder';
+import { render } from 'react-dom';
 
+
+class UserPanel extends React.Component{
+    render(){
+       console.log(this.props.currentUser)
+        return(
+            <div></div>
+        )
+    }
+}
 
 
 
@@ -91,7 +110,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function MiniDrawer() {
+function MiniDrawer() {
   const classes = useStyles();
   const theme = useTheme();
   const [openCollapse, setOpenCollapse] = React.useState(false); 
@@ -110,6 +129,13 @@ export default function MiniDrawer() {
     setOpenCollapse(!openCollapse);
  }
 
+ function handleSignOut(){
+     firebase
+     .auth()
+     .signOut()
+     .then(() => console.log('signed out!'))
+     .catch(err => console.log(err));
+ }
   return (
     <div className={classes.root}>
       <CssBaseline />
@@ -155,43 +181,55 @@ export default function MiniDrawer() {
           </IconButton>
         </div>
         <Divider />
-        <List>
-          {['Profile'].map((text, index) => (
-            <ListItem button key={text}>
-              <ListItemIcon><PermIdentityIcon/></ListItemIcon>
-              <ListItemText primary={text} />
-            </ListItem>
-          ))}
-        </List>
-        <Divider />
         <ListItem button onClick={handleOpenSettings}>
         <ListItemIcon>
-          <InboxIcon />
+          <PermIdentityIcon />
         </ListItemIcon>
-        <ListItemText primary="Inbox" />
-        {open ? <ExpandLess /> : <ExpandMore />}
+        <ListItemText primary="Profile" />
+        {openCollapse ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
         <Collapse in={openCollapse} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
-          <ListItem button className={classes.nested}>
+          <ListItem key={'avatar'} button className={classes.nested}>
             <ListItemIcon>
-              <StarBorder />
+              <SettingsIcon />
             </ListItemIcon>
-            <ListItemText primary="Starred" />
+            <ListItemText primary="Settings" />
           </ListItem>
         </List>
       </Collapse>
-        <Divider />
-        <List>
-          {['Logout'].map((text, index) => (
+    
+      <Collapse in={openCollapse} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItem button key={'signout'} className={classes.nested} onClick={handleSignOut}>
+            <ListItemIcon>
+              <ExitToAppIcon />
+            </ListItemIcon>
+            <ListItemText primary="Sign out" />
+          </ListItem>
+        </List>
+      </Collapse>
+
+
+      <Divider/>
+
+
+      <List>
+          {['Channels'].map((text, index) => (
             <ListItem button key={text}>
-              <ListItemIcon><ExitToAppIcon/></ListItemIcon>
+              <ListItemIcon><InboxIcon/></ListItemIcon>
               <ListItemText primary={text} />
             </ListItem>
           ))}
         </List>
-
+        <Divider />
       </Drawer>
       </div>
             )
           }
+
+          const mapStateToProps = state => ({
+            currentUser: state.user.currentUser
+          })
+
+    export default connect(mapStateToProps)(MiniDrawer)
